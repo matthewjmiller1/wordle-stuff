@@ -9,26 +9,34 @@ class Env:
     """Class to represent the environment state"""
 
     args: argparse.Namespace
+    orig_word_list: list = field(default_factory=list)
     letter_count: Counter = field(default_factory=Counter)
     position_count: list[Counter] = \
         field(default_factory=lambda: [Counter() for i in range(5)])
     word_count: int = 0
     word_scores: dict = field(default_factory=dict)
 
-    def get_counts(self, line: str):
-        self.word_count += 1
-        self.letter_count.update(set(line))
-        for i, c in enumerate(line):
-            self.position_count[i].update(c)
+    def read_word_list(self, fname: str):
+        with open(fname) as f:
+            for line in f:
+                self.orig_word_list.append(line.rstrip())
+        self.word_count = len(self.orig_word_list)
 
-    def get_word_scores(self, line: str):
-        word_score = 0
-        for i, c in enumerate(line):
-            char_score = (
-                    (self.letter_count[c] / self.word_count) *
-                    (self.position_count[i][c] / self.word_count))
-            word_score += char_score
-        self.word_scores[line] = word_score
+    def get_counts(self):
+        for word in self.orig_word_list:
+            self.letter_count.update(set(word))
+            for i, c in enumerate(word):
+                self.position_count[i].update(c)
+
+    def get_word_scores(self):
+        for word in self.orig_word_list:
+            word_score = 0
+            for i, c in enumerate(word):
+                char_score = (
+                        (self.letter_count[c] / self.word_count) *
+                        (self.position_count[i][c] / self.word_count))
+                word_score += char_score
+            self.word_scores[word] = word_score
 
     def filter_word_scores(self):
         d = {}
@@ -110,12 +118,11 @@ def main():
             default=False, help='enable debug output')
 
     env = Env(parser.parse_args())
-    with open('sgb-words.txt') as f:
-        for line in f:
-            env.get_counts(line.rstrip())
-        f.seek(0)
-        for line in f:
-            env.get_word_scores(line.rstrip())
+
+    env.read_word_list('sgb-words.txt')
+
+    env.get_counts()
+    env.get_word_scores()
 
     env.filter_word_scores()
     env.sort_word_scores()
