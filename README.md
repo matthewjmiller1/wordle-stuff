@@ -50,7 +50,8 @@ that are specific to Wordle:
    words and it seems like a waste to use your first guess or two with words
    that have duplicate letters.
 
-Based on that, these are the words that have the highest scores (see the out/word_scores.txt file for complete results):
+Based on that, these are the words that have the highest scores (see the
+`out/word_scores.txt` file for complete results):
 
 | Word | Score |
 | --- | --- |
@@ -65,9 +66,14 @@ Based on that, these are the words that have the highest scores (see the out/wor
 | soled | 0.2342 |
 | sawed | 0.2339 |
 
-In the out/word_scores2.txt file, for each of the words in the rankings, it then
-computes the top 10 ranked words that share no letters with the word. The idea
-being this can give you two good starting words to use.
+In the `out/word_scores2.txt` file, for each of the words in the rankings, it
+then computes the top 10 ranked words that share no letters with the word. The
+idea being this can give you two good starting words to use.
+
+Also, there is a variation in the metrics where the two filters above are
+applied to the word list before computing the scores (instead of after). Those
+are the files in the `out/` directory with the `_prefilter` suffix are the
+results for that variation. The results are similar.
 
 tl;dr: "saner" then "doily" is a probably a pretty good first two guesses for
 Wordle.
