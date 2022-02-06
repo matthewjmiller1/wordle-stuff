@@ -73,7 +73,18 @@ idea being this can give you two good starting words to use.
 Also, there is a variation in the metrics where the two filters above are
 applied to the word list before computing the scores (instead of after). Those
 are the files in the `out/` directory with the `_prefilter` suffix are the
-results for that variation. The results are similar.
+results for that variation. The results are similar. To generate these:
+```
+wordle_probability.py --pre-filter
+```
+
+Also, there is a variation to use the first 200 Wordle answers as the training
+data instead of all five letter words and disable all filtering. Those are the
+files in the `out/` directory with the `_no-postfilter_wordle-data` suffix. To
+generate these:
+```
+wordle_probability.py --wordle --disable-post
+```
 
 tl;dr: "saner" then "doily" is a probably a pretty good first two guesses for
 Wordle.
