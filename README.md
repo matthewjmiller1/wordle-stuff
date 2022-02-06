@@ -78,10 +78,11 @@ results for that variation. The results are similar. To generate these:
 wordle_probability.py --pre-filter
 ```
 
-Also, there is a variation to use the first 200 Wordle answers as the training
-data instead of all five letter words and disable all filtering. Those are the
-files in the `out/` directory with the `_no-postfilter_wordle-data` suffix. To
-generate these:
+Also, there is a variation to use the first [200 Wordle
+answers](https://gist.github.com/potluck/4ff27425a1896100279a2552f7a062da) as
+the training data instead of all five letter words and disable all filtering.
+Those are the files in the `out/` directory with the
+`_no-postfilter_wordle-data` suffix. To generate these:
 ```
 wordle_probability.py --wordle --disable-post
 ```
