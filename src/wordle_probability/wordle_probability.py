@@ -9,29 +9,35 @@ class Env:
     """Class to represent the environment state"""
 
     args: argparse.Namespace
-    orig_word_list: list = field(default_factory=list)
-    word_list: list = field(default_factory=list)
+    orig_training_word_list: list = field(default_factory=list)
+    training_word_list: list = field(default_factory=list)
+    total_word_list: list = field(default_factory=list)
     letter_count: Counter = field(default_factory=Counter)
     position_count: list[Counter] = \
         field(default_factory=lambda: [Counter() for i in range(5)])
     word_count: int = 0
     word_scores: dict = field(default_factory=dict)
 
-    def read_word_list(self, fname: str):
-        with open(fname) as f:
+    def read_word_list(self, training_words_fname: str, total_words_fname):
+        with open(training_words_fname) as f:
             for line in f:
-                self.orig_word_list.append(line.rstrip())
-        self.word_list = self.orig_word_list
-        self.word_count = len(self.word_list)
+                self.orig_training_word_list.append(line.rstrip())
+
+        self.training_word_list = self.orig_training_word_list
+        self.word_count = len(self.training_word_list)
+
+        with open(total_words_fname) as f:
+            for line in f:
+                self.total_word_list.append(line.rstrip())
 
     def get_counts(self):
-        for word in self.word_list:
+        for word in self.training_word_list:
             self.letter_count.update(set(word))
             for i, c in enumerate(word):
                 self.position_count[i].update(c)
 
     def get_word_scores(self):
-        for word in self.word_list:
+        for word in self.total_word_list:
             word_score = 0
             for i, c in enumerate(word):
                 char_score = (
@@ -53,9 +59,9 @@ class Env:
         return False
 
     def filter_word_list(self):
-        self.word_list = \
-            [w for w in self.orig_word_list if not self.filter_word(w)]
-        self.word_count = len(self.word_list)
+        self.training_word_list = \
+            [w for w in self.orig_training_word_list if not self.filter_word(w)]
+        self.word_count = len(self.training_word_list)
 
     def filter_word_scores(self):
         d = {}
@@ -126,16 +132,29 @@ class Env:
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--wordle-data-set', dest='use_wordle_data',
+            action='store_true', default=False,
+            help=('use the Wordle answers as the training data set '
+                'instead of all 5 letter words'))
     parser.add_argument('--pre-filter', dest='do_prefilter',
             action='store_true', default=False,
             help=('filter out plural and multiple letter words before '
+                'computing scores'))
+    parser.add_argument('--disable-post-filter', dest='do_postfilter',
+            action='store_false', default=True,
+            help=('filter out plural and multiple letter words after '
                 'computing scores'))
     parser.add_argument('-d', '--debug', dest='do_debug', action='store_true',
             default=False, help='enable debug output')
 
     env = Env(parser.parse_args())
 
-    env.read_word_list('sgb-words.txt')
+    training_fname = 'sgb-words.txt'
+    if env.args.use_wordle_data:
+        training_fname = 'first_200_wordles.txt'
+
+
+    env.read_word_list(training_fname, 'sgb-words.txt')
 
     if env.args.do_prefilter:
         env.filter_word_list()
@@ -145,13 +164,18 @@ def main():
 
     # If prefilter, the words have already been filtered
     if not env.args.do_prefilter:
-        env.filter_word_scores()
+        if env.args.do_postfilter:
+            env.filter_word_scores()
 
     env.sort_word_scores()
 
     suffix = ""
     if env.args.do_prefilter:
-        suffix = "_prefilter"
+        suffix += "_prefilter"
+    if not env.args.do_postfilter:
+        suffix += "_no-postfilter"
+    if env.args.use_wordle_data:
+        suffix += "_wordle-data"
 
     env.write_letter_probabilities(f'out/letter_probabilities{suffix}.txt')
     env.write_word_scores(f'out/word_scores{suffix}.txt')
