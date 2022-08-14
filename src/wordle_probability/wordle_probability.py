@@ -131,7 +131,7 @@ class Env:
                         break
 
 def main():
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Compute Wordle heurisitics')
     parser.add_argument('--wordle-data-set', dest='use_wordle_data',
             action='store_true', default=False,
             help=('use the Wordle answers as the training data set '
