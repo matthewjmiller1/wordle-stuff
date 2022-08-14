@@ -4,6 +4,7 @@ import argparse
 from dataclasses import dataclass, field
 from collections import Counter
 
+
 @dataclass
 class Env:
     """Class to represent the environment state"""
@@ -13,8 +14,9 @@ class Env:
     training_word_list: list = field(default_factory=list)
     total_word_list: list = field(default_factory=list)
     letter_count: Counter = field(default_factory=Counter)
-    position_count: list[Counter] = \
-        field(default_factory=lambda: [Counter() for i in range(5)])
+    position_count: list[Counter] = field(
+        default_factory=lambda: [Counter() for i in range(5)]
+    )
     word_count: int = 0
     word_scores: dict = field(default_factory=dict)
 
@@ -40,9 +42,9 @@ class Env:
         for word in self.total_word_list:
             word_score = 0
             for i, c in enumerate(word):
-                char_score = (
-                        (self.letter_count[c] / self.word_count) *
-                        (self.position_count[i][c] / self.word_count))
+                char_score = (self.letter_count[c] / self.word_count) * (
+                    self.position_count[i][c] / self.word_count
+                )
                 word_score += char_score
             self.word_scores[word] = word_score
 
@@ -59,8 +61,9 @@ class Env:
         return False
 
     def filter_word_list(self):
-        self.training_word_list = \
-            [w for w in self.orig_training_word_list if not self.filter_word(w)]
+        self.training_word_list = [
+            w for w in self.orig_training_word_list if not self.filter_word(w)
+        ]
         self.word_count = len(self.training_word_list)
 
     def filter_word_scores(self):
@@ -73,8 +76,11 @@ class Env:
         self.word_scores = d
 
     def sort_word_scores(self):
-        d = dict(sorted(self.word_scores.items(), key=lambda item: item[1],
-            reverse=True))
+        d = dict(
+            sorted(
+                self.word_scores.items(), key=lambda item: item[1], reverse=True
+            )
+        )
         self.word_scores = d
 
     def write_letter_probabilities(self, fname: str):
@@ -82,29 +88,33 @@ class Env:
         indent_str = indent * " "
         indent2_str = indent_str * 2
 
-        with open(fname, 'w') as f:
-            f.write('Probability of letter appearing in word\n')
+        with open(fname, "w") as f:
+            f.write("Probability of letter appearing in word\n")
             for i, c in enumerate(self.letter_count.most_common()):
-                f.write(f'{indent_str}{i+1:2}. {c[0]} '
-                    f'(p={c[1]/self.word_count:.4f}) '
-                    f'({c[1]}/{self.word_count})\n')
-            f.write('\n')
-            f.write('Probability of letter appearing at a given position\n')
+                f.write(
+                    f"{indent_str}{i+1:2}. {c[0]} "
+                    f"(p={c[1]/self.word_count:.4f}) "
+                    f"({c[1]}/{self.word_count})\n"
+                )
+            f.write("\n")
+            f.write("Probability of letter appearing at a given position\n")
             for i, pos in enumerate(self.position_count):
-                f.write(f'{indent_str}Position {i+1}\n')
+                f.write(f"{indent_str}Position {i+1}\n")
                 for j, c in enumerate(pos.most_common()):
-                    f.write(f'{indent2_str}{j+1:2}. {c[0]} '
-                        f'(p={c[1]/self.word_count:.4f}) '
-                        f'({c[1]}/{self.word_count})\n')
+                    f.write(
+                        f"{indent2_str}{j+1:2}. {c[0]} "
+                        f"(p={c[1]/self.word_count:.4f}) "
+                        f"({c[1]}/{self.word_count})\n"
+                    )
 
     def write_word_scores(self, fname: str):
         indent = 3
         indent_str = indent * " "
 
-        with open(fname, 'w') as f:
-            f.write('Word scores\n')
+        with open(fname, "w") as f:
+            f.write("Word scores\n")
             for i, (k, v) in enumerate(self.word_scores.items()):
-                f.write(f'{indent_str}{i+1:4}. {k} (score={v:.4f})\n')
+                f.write(f"{indent_str}{i+1:4}. {k} (score={v:.4f})\n")
 
     def write_word_scores_with_second_words(self, fname: str):
         indent = 3
@@ -113,48 +123,75 @@ class Env:
 
         second_word_count = 10
 
-        with open(fname, 'w') as f:
-            f.write('Word scores with subsequent scores for words that do not '
-                    'share letters\n')
+        with open(fname, "w") as f:
+            f.write(
+                "Word scores with subsequent scores for words that do not "
+                "share letters\n"
+            )
             for i, (k, v) in enumerate(self.word_scores.items()):
-                f.write(f'{indent_str}{i+1:4}. {k} (score={v:.4f})\n')
+                f.write(f"{indent_str}{i+1:4}. {k} (score={v:.4f})\n")
 
                 count = 0
                 for j, (k2, v2) in enumerate(self.word_scores.items()):
                     if len(set(k).intersection(set(k2))):
                         continue
 
-                    f.write(f'{indent2_str}{count+1:4}. {k2} '
-                            f'(score={v2:.4f})\n')
+                    f.write(
+                        f"{indent2_str}{count+1:4}. {k2} " f"(score={v2:.4f})\n"
+                    )
                     count += 1
                     if count >= second_word_count:
                         break
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Compute Wordle heurisitics')
-    parser.add_argument('--wordle-data-set', dest='use_wordle_data',
-            action='store_true', default=False,
-            help=('use the Wordle answers as the training data set '
-                'instead of all 5 letter words'))
-    parser.add_argument('--pre-filter', dest='do_prefilter',
-            action='store_true', default=False,
-            help=('filter out plural and multiple letter words before '
-                'computing scores'))
-    parser.add_argument('--disable-post-filter', dest='do_postfilter',
-            action='store_false', default=True,
-            help=('filter out plural and multiple letter words after '
-                'computing scores'))
-    parser.add_argument('-d', '--debug', dest='do_debug', action='store_true',
-            default=False, help='enable debug output')
+    parser = argparse.ArgumentParser(description="Compute Wordle heurisitics")
+    parser.add_argument(
+        "--wordle-data-set",
+        dest="use_wordle_data",
+        action="store_true",
+        default=False,
+        help=(
+            "use the Wordle answers as the training data set "
+            "instead of all 5 letter words"
+        ),
+    )
+    parser.add_argument(
+        "--pre-filter",
+        dest="do_prefilter",
+        action="store_true",
+        default=False,
+        help=(
+            "filter out plural and multiple letter words before "
+            "computing scores"
+        ),
+    )
+    parser.add_argument(
+        "--disable-post-filter",
+        dest="do_postfilter",
+        action="store_false",
+        default=True,
+        help=(
+            "filter out plural and multiple letter words after "
+            "computing scores"
+        ),
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        dest="do_debug",
+        action="store_true",
+        default=False,
+        help="enable debug output",
+    )
 
     env = Env(parser.parse_args())
 
-    training_fname = 'sgb-words.txt'
+    training_fname = "sgb-words.txt"
     if env.args.use_wordle_data:
-        training_fname = 'first_200_wordles.txt'
+        training_fname = "first_200_wordles.txt"
 
-
-    env.read_word_list(training_fname, 'sgb-words.txt')
+    env.read_word_list(training_fname, "sgb-words.txt")
 
     if env.args.do_prefilter:
         env.filter_word_list()
@@ -177,12 +214,13 @@ def main():
     if env.args.use_wordle_data:
         suffix += "_wordle-data"
 
-    env.write_letter_probabilities(f'out/letter_probabilities{suffix}.txt')
-    env.write_word_scores(f'out/word_scores{suffix}.txt')
-    env.write_word_scores_with_second_words(f'out/word_scores2{suffix}.txt')
+    env.write_letter_probabilities(f"out/letter_probabilities{suffix}.txt")
+    env.write_word_scores(f"out/word_scores{suffix}.txt")
+    env.write_word_scores_with_second_words(f"out/word_scores2{suffix}.txt")
 
     if env.args.do_debug:
         print(env)
-            
+
+
 if __name__ == "__main__":
     main()
