@@ -146,7 +146,8 @@ class Env:
 
 def main():
     parser = argparse.ArgumentParser(description="Compute Wordle heurisitics")
-    parser.add_argument(
+    ds_group = parser.add_mutually_exclusive_group()
+    ds_group.add_argument(
         "--wordle-data-set",
         dest="use_wordle_data",
         action="store_true",
@@ -154,6 +155,16 @@ def main():
         help=(
             "use the Wordle answers as the training data set "
             "instead of all 5 letter words"
+        ),
+    )
+    ds_group.add_argument(
+        "--nytimes-data-set",
+        dest="use_nytimes_data",
+        action="store_true",
+        default=False,
+        help=(
+            "use the NY Times 2022-01-25 possible Wordle answers as the "
+            "training data set instead of all 5 letter words"
         ),
     )
     parser.add_argument(
@@ -190,6 +201,8 @@ def main():
     training_fname = "sgb-words.txt"
     if env.args.use_wordle_data:
         training_fname = "first_200_wordles.txt"
+    if env.args.use_nytimes_data:
+        training_fname = "nytimes_possible_answers_2022-01-25.txt"
 
     env.read_word_list(training_fname, "sgb-words.txt")
 
@@ -213,6 +226,8 @@ def main():
         suffix += "_no-postfilter"
     if env.args.use_wordle_data:
         suffix += "_wordle-data"
+    if env.args.use_nytimes_data:
+        suffix += "_nytimes-data"
 
     env.write_letter_probabilities(f"out/letter_probabilities{suffix}.txt")
     env.write_word_scores(f"out/word_scores{suffix}.txt")
